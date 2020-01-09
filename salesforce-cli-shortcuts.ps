@@ -1,5 +1,10 @@
 Function sfdx-help{sfdx force:doc:commands:list}
 
+Function sfdx-add-org(){
+	$ORGALIAS = Read-Host -Prompt "`nALIAS FOR THE ORG"
+	sfdx force:auth:web:login -a $ORGALIAS
+}
+
 Function sfdx-orgs{sfdx force:org:list}
 
 Function sfdx-soql() {
