@@ -2,7 +2,12 @@ Function sfdx-help{sfdx force:doc:commands:list}
 
 Function sfdx-add-org(){
 	$ORGALIAS = Read-Host -Prompt "`nALIAS FOR THE ORG"
-	sfdx force:auth:web:login -a $ORGALIAS
+	$TYPE = Read-Host -Prompt "`nProduction or Sandbox (p/s)"
+	if($TYPE -eq "p"){
+		sfdx force:auth:web:login -a $ORGALIAS
+	} else {
+		sfdx force:auth:web:login -a $ORGALIAS -r https://test.salesforce.com/
+	}
 }
 
 Function sfdx-orgs{sfdx force:org:list}
