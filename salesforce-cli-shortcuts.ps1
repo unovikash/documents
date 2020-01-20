@@ -83,10 +83,10 @@ Function sfdx-search-user() {
 								if(-not ($USERHASH.ContainsKey($USER))){
 									$USERHASH[$USER] = $ORG
 								} else {
-                                    $ORGLIST = $USERHASH.$USER
-                                    $ORGLIST += ", " + $ORG
-                                    $USERHASH[$USER] = $ORGLIST
-                                }
+								    $ORGLIST = $USERHASH.$USER
+								    $ORGLIST += ", " + $ORG
+								    $USERHASH[$USER] = $ORGLIST
+								}
 							}
 							else {
 								$INACTIVE += "ORG: " + $ORG + "`t" + $DATA[2] + " " + $DATA[3] + " (" + $DATA[0] + ")`t" + $DATA[1] + "`n"
@@ -104,9 +104,9 @@ Function sfdx-search-user() {
 				Write-Host("")
 				Write-Host([string[]]$USERHASH.Count + " active users found.") -ForegroundColor Green
 
-                foreach($h in $USERHASH.GetEnumerator()) {
-                    Write-Host "$($h.Name)`t--`t$($h.Value)"
-                }
+				foreach($h in $USERHASH.GetEnumerator()) {
+				    Write-Host "$($h.Name)`t--`t$($h.Value)"
+				}
 				
 				Write-Host("`nACTIVE USERS FOUND") -ForegroundColor Yellow
 				Write-Host($ACTIVE)
