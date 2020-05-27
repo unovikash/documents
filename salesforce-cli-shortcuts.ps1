@@ -1,17 +1,23 @@
-Function my-commands() {
+Write-Host("sfdx-help" + "`t`tSalesforce Commands List")
+Write-Host("sfdx-help-all" + "`t`tSFDX Commands List")
+Write-Host("")
+
+Function sfdx-help() {
 	Write-Host("")
-	Write-Host("sfdx-help" + "`t`tSFDX Help commands")
+	Write-Host("sfdx-help" + "`t`tSalesforce Commands List")
+	Write-Host("sfdx-help-all" + "`t`tSFDX Commands List")
 	Write-Host("sfdx-add-org" + "`t`tAdd Salesforce org (sandbox/prod)")
 	Write-Host("sfdx-orgs" + "`t`tView all added Salesforce orgs")
 	Write-Host("sfdx-soql" + "`t`tRun SOQL queries in a Salesforce org")
-	Write-Host("sfdx-open(<alias>)" + "`tOpen your instance in Web Browser")
+	Write-Host("sfdx-open" + "`tOpen your instance in Web Browser")
 	Write-Host("open-csv(<filename>)" + "`tOpen the specified CSV file in Powershell viewer")
 	Write-Host("sfdx-search-user" + "`tSearch for a Salesforce user across orgs")
+	Write-Host("sfdx-record-update" + "`tUpdate a record in Salesforce")
 
 	Write-Host("")
 }
 
-Function sfdx-help{sfdx force:doc:commands:list}
+Function sfdx-help-all{sfdx force:doc:commands:list}
 
 Function sfdx-add-org(){
 	$ORGALIAS = Read-Host -Prompt "`nALIAS FOR THE ORG"
@@ -50,8 +56,10 @@ Function sfdx-soql() {
 	Write-Host("Exiting...`n")
 }
 
-Function sfdx-open($alias)
-	{sfdx force:org:open -u $alias}
+Function sfdx-open() {
+		$alias = Read-Host -Prompt "`nWHICH ORG/ALIAS (tis/tis-part/...)?"
+		sfdx force:org:open -u $alias
+	}
 
 Function open-csv($file)
 	{Import-Csv $file |Out-GridView}
@@ -68,7 +76,7 @@ Function sfdx-search-user() {
 		Write-Host -NoNewline ("Searching") -ForegroundColor Gray
 
 		if(-not [string]::IsNullOrEmpty($USERNAME)) {
-			$ORGLIST = "tis", "tis-part", "tis-c2", "tis-c2c", "tis-uat"
+			$ORGLIST = "tis", "tis-part", "tis-c2", "tis-uat"
 
 			foreach($ORG in $ORGLIST) {
 				Write-Host -NoNewline (".") -ForegroundColor Gray
@@ -83,10 +91,10 @@ Function sfdx-search-user() {
 								if(-not ($USERHASH.ContainsKey($USER))){
 									$USERHASH[$USER] = $ORG
 								} else {
-								    $ORGLIST = $USERHASH.$USER
-								    $ORGLIST += ", " + $ORG
-								    $USERHASH[$USER] = $ORGLIST
-								}
+                                    $ORGLIST = $USERHASH.$USER
+                                    $ORGLIST += ", " + $ORG
+                                    $USERHASH[$USER] = $ORGLIST
+                                }
 							}
 							else {
 								$INACTIVE += "ORG: " + $ORG + "`t" + $DATA[2] + " " + $DATA[3] + " (" + $DATA[0] + ")`t" + $DATA[1] + "`n"
@@ -104,9 +112,9 @@ Function sfdx-search-user() {
 				Write-Host("")
 				Write-Host([string[]]$USERHASH.Count + " active users found.") -ForegroundColor Green
 
-				foreach($h in $USERHASH.GetEnumerator()) {
-				    Write-Host "$($h.Name)`t--`t$($h.Value)"
-				}
+                foreach($h in $USERHASH.GetEnumerator()) {
+                    Write-Host "$($h.Name)`t--`t$($h.Value)"
+                }
 				
 				Write-Host("`nACTIVE USERS FOUND") -ForegroundColor Yellow
 				Write-Host($ACTIVE)
@@ -127,4 +135,19 @@ Function sfdx-search-user() {
 		}
 		$CONTINUE = Read-Host -Prompt "`nCONTINUE (y/n)"
 	}
+}
+
+Function sfdx-record-update(){
+	$ORG = Read-Host -Prompt "`nORG"
+	$OBJECT = Read-Host -Prompt "OBJECT"
+	$ID = Read-Host -Prompt "ID"
+	$UPDATE = Read-Host -Prompt "UPDATE (?)"
+
+	if(($UPDATE -eq "help") -or ($UPDATE -eq "?")) {
+		Write-Host("`nAdd the values to be updated in the form <field API name>=<'New Value'>. You can skip the single quote if there's no space. You can chain multiple fields separated by space. Example -")
+		Write-Host("`tName='John Doe' Email=johndoe@something.com") -ForegroundColor Yellow
+		$UPDATE = Read-Host -Prompt "`nUPDATE"
+	}
+
+	sfdx force:data:record:update -s $OBJECT -i $ID -v "$UPDATE" -u $ORG
 }
