@@ -13,6 +13,7 @@ Function sfdx-help() {
 	Write-Host("open-csv(<filename>)" + "`tOpen the specified CSV file in Powershell viewer")
 	Write-Host("sfdx-search-user" + "`tSearch for a Salesforce user across orgs")
 	Write-Host("sfdx-record-update" + "`tUpdate a record in Salesforce")
+	Write-Host("sfdx-enr-recon" + "`tReconciliation Report for Enrollments by Year")
 
 	Write-Host("")
 }
@@ -33,27 +34,45 @@ Function sfdx-orgs{sfdx force:org:list}
 
 Function sfdx-soql() {
 	$ORGALIAS = Read-Host -Prompt "`nWHICH ORG/ALIAS?"
+	$QUERY = Read-Host -Prompt "`nQUERY"
+	$QUERYHISTORY = $QUERY
+	$STATE = "run"
 
-	$CONTINUE = "y"
-	while($CONTINUE -eq "y"){
-		$QUERY = Read-Host -Prompt "`nQUERY"
-		Write-Host("")
-		sfdx force:data:soql:query -u $ORGALIAS -q $QUERY
-		
-		$EXPORT = Read-Host -Prompt "`nEXPORT (y/n/m) (yes/no/more)?"
-		if(($EXPORT -eq "y") -or ($EXPORT -eq "yes")) {
-			sfdx force:data:soql:query -u $ORGALIAS -q $QUERY -r csv > export.csv
-			Write-host("Exported to export.csv")
-		} elseif (($EXPORT -eq "m") -or ($EXPORT -eq "more")) {
-			$FILENAME = Read-Host -Prompt "`nFILENAME (with the trailing .csv)"
+	while($true){	
+		if($STATE -eq "run") {
+			Write-Host("")
+			sfdx force:data:soql:query -u $ORGALIAS -q $QUERY
+		}
+
+		Write-Host("`n")
+		$OPTION = Read-Host -Prompt "1 Run Again`n2 Export`n3 Another Query`n4 History`n5 Exit`n`nOPTION"
+
+		if ($OPTION -eq "1") {
+			$STATE = "run"
+			continue
+		}
+		elseif ($OPTION -eq "2") {
+			$FILENAME = Read-Host -Prompt "`nFILENAME (example - accounts.csv)"
 			sfdx force:data:soql:query -u $ORGALIAS -q $QUERY -r csv > $FILENAME
 			Write-host("Exported to " + $FILENAME)
+			$STATE = "no-run"
 		}
-		else {}
-
-		$CONTINUE = Read-Host -Prompt "`nCONTINUE (y/n)"
+		elseif ($OPTION -eq "4") {
+			Write-host("`nSOQL HISTORY") -ForegroundColor Yellow
+			Write-Host("============") -ForegroundColor Yellow
+			Write-host($QUERYHISTORY) -ForegroundColor Gray
+			$STATE = "no-run"
+		}
+		elseif ($OPTION -eq "5") {
+			break;
+		}
+		else {
+			$QUERY = Read-Host -Prompt "`nQUERY"
+			$STATE = "run"
+			$QUERYHISTORY += "`n" + $QUERY
+		}
 	}
-	Write-Host("Exiting...`n")
+	Write-Host("`nExiting...`n")
 }
 
 Function sfdx-open() {
@@ -150,4 +169,15 @@ Function sfdx-record-update(){
 	}
 
 	sfdx force:data:record:update -s $OBJECT -i $ID -v "$UPDATE" -u $ORG
+}
+
+Function sfdx-enr-recon() {
+	$ORGALIAS = "tis"
+	$YEAR = Read-Host -Prompt "`nYEAR"
+	$QUERY = "SELECT Confirmation_Number__c, Policy_Status__c, Purchase_Date_Year__c FROM Enrollments__c " + 
+				"WHERE Record_Status__c='Enrollment' AND Purchase_Date__c<TODAY AND Purchase_Date_Year__c='$YEAR'"
+	
+	Write-host("Processing...")
+	sfdx force:data:soql:query -u $ORGALIAS -q $QUERY -r csv > $YEAR-policy-SF.csv
+	Write-host("`nExported!") -ForegroundColor Green
 }
